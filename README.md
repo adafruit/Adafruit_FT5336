@@ -1,4 +1,4 @@
-# Adafruit_FT5336 Library [![Build Status](https://github.com/adafruit/Adafruit_FT5336_Library/workflows/Arduino%20Library%20CI/badge.svg)](https://github.com/adafruit/Adafruit_FT5336_Library/actions)[![Documentation](https://github.com/adafruit/ci-arduino/blob/master/assets/doxygen_badge.svg)](http://adafruit.github.io/Adafruit_FT5336_Library/html/index.html)
+# Adafruit_FT5336 Library [![Build Status](https://github.com/adafruit/Adafruit_FT5336/workflows/Arduino%20Library%20CI/badge.svg)](https://github.com/adafruit/Adafruit_FT5336/actions)[![Documentation](https://github.com/adafruit/ci-arduino/blob/master/assets/doxygen_badge.svg)](http://adafruit.github.io/Adafruit_FT5336/html/index.html)
 
 <img src="https://cdn-shop.adafruit.com/970x728/1947-05.jpg" height="300"/>
 
