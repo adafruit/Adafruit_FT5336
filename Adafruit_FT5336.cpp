@@ -27,7 +27,7 @@
 
 #include <Adafruit_FT5336.h>
 
-#define FT5336_DEBUG
+//#define FT5336_DEBUG
 
 /**************************************************************************/
 /*!
@@ -117,6 +117,28 @@ TS_Point Adafruit_FT5336::getPoint(uint8_t n) {
     return TS_Point(touchX[n], touchY[n], 1);
   }
 }
+
+
+void Adafruit_FT5336::getPoints(TS_Point *points, uint8_t maxtouches) {
+  readData();
+  
+  // zero out all the points
+  for (uint8_t i=0; i<maxtouches; i++) {
+    points[i].x = 0;
+    points[i].y = 0;
+    points[i].z = 0;
+  }
+
+  // identify all points and assign
+  for (uint8_t i=0; i<touches; i++) {
+    uint8_t id = touchID[i];
+    if (id >= maxtouches) continue;
+    points[id].x = touchX[i];
+    points[id].y = touchY[i];
+    points[id].z = 1;
+  }
+}
+
 
 /************ lower level i/o **************/
 

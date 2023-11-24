@@ -1,6 +1,6 @@
 /***************************************************
   This is our touchscreen painting example for the Adafruit HX8357
-  captouch breakout
+  with FT5336 captouch breakout
   ----> http://www.adafruit.com/products/5846
 
   Check out the links above for our tutorials and wiring diagrams
@@ -19,6 +19,7 @@
 
 // The FT5336 uses hardware I2C (SCL/SDA)
 Adafruit_FT5336 ctp = Adafruit_FT5336();
+#define FT5336_MAXTOUCHES  5
 
 // The display also uses hardware SPI, plus #9 & #10
 #define TFT_CS         9
@@ -55,8 +56,8 @@ void setup(void) {
   tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, HX8357_CYAN);
   tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, HX8357_BLUE);
   tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, HX8357_MAGENTA);
-  tft.fillRect(BOXSIZE*6, 0, BOXSIZE, BOXSIZE, HX8357_BLACK);
   tft.fillRect(BOXSIZE*6, 0, BOXSIZE, BOXSIZE, HX8357_WHITE);
+  tft.fillRect(BOXSIZE*7, 0, BOXSIZE, BOXSIZE, HX8357_BLACK);
    
   // select the current color 'red'
   tft.drawRect(0, 0, BOXSIZE, BOXSIZE, HX8357_WHITE);
@@ -71,17 +72,19 @@ void loop() {
   }
 
   // Retrieve the points, up to 5!
-  TS_Point ps[5];
-  for (int i=0; i<touches; i++) {
-    ps[i] = ctp.getPoint(i);
-    // flip it around to match the screen rotation, if desired
+  TS_Point ps[FT5336_MAXTOUCHES];
+  ctp.getPoints(ps, FT5336_MAXTOUCHES);
+  
+  for (int i=0; i<FT5336_MAXTOUCHES; i++) {
+    // Check if z (pressure) is zero, skip if so
+    if (ps[i].z == 0) continue;
     /*
     ps[i].x = map(ps[i].x, 0, 320, 0, 320);
     ps[i].y = map(ps[i].y, 0, 480, 0, 480);
     */
     // Print out the remapped/rotated coordinates
-    Serial.print("("); Serial.print(ps[0].x);
-    Serial.print(", "); Serial.print(ps[0].y);
+    Serial.print("("); Serial.print(ps[i].x);
+    Serial.print(", "); Serial.print(ps[i].y);
     Serial.print(")\t");  
   }
   Serial.println();
@@ -107,6 +110,9 @@ void loop() {
      } else if (ps[0].x <= BOXSIZE*6) {
        currentcolor = HX8357_MAGENTA;
        tft.drawRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, HX8357_WHITE);
+     } else if (ps[0].x <= BOXSIZE*7) {
+       currentcolor = HX8357_WHITE;
+       tft.drawRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, HX8357_RED);
      } else {
         // erase
         tft.fillScreen(HX8357_BLACK);
@@ -118,7 +124,6 @@ void loop() {
         tft.fillRect(BOXSIZE*3, 0, BOXSIZE, BOXSIZE, HX8357_CYAN);
         tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, HX8357_BLUE);
         tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, HX8357_MAGENTA);
-        tft.fillRect(BOXSIZE*6, 0, BOXSIZE, BOXSIZE, HX8357_BLACK);
         tft.fillRect(BOXSIZE*6, 0, BOXSIZE, BOXSIZE, HX8357_WHITE);
      }
 
@@ -135,11 +140,16 @@ void loop() {
           tft.fillRect(BOXSIZE*4, 0, BOXSIZE, BOXSIZE, HX8357_BLUE);
         if (oldcolor == HX8357_MAGENTA) 
           tft.fillRect(BOXSIZE*5, 0, BOXSIZE, BOXSIZE, HX8357_MAGENTA);
+        if (oldcolor == HX8357_WHITE) 
+          tft.fillRect(BOXSIZE*6, 0, BOXSIZE, BOXSIZE, HX8357_WHITE);
      }
   }
- for (int i=0; i<touches; i++) {
-   if (((ps[i].y-PENRADIUS) > BOXSIZE) && ((ps[i].y+PENRADIUS) < tft.height())) {
-     tft.fillCircle(ps[i].x, ps[i].y, PENRADIUS, currentcolor);
-   }
- }
+  for (int i=0; i<FT5336_MAXTOUCHES; i++) {
+    // Check if z (pressure) is zero, skip if so
+    if (ps[i].z == 0) continue;
+    
+    if (((ps[i].y-PENRADIUS) > BOXSIZE) && ((ps[i].y+PENRADIUS) < tft.height())) {
+      tft.fillCircle(ps[i].x, ps[i].y, PENRADIUS, currentcolor);
+    }
+  }
 }

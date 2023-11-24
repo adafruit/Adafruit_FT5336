@@ -72,6 +72,7 @@ public:
   bool begin(uint8_t i2c_addr = FT53XX_DEFAULT_ADDR, TwoWire *theWire = &Wire);
   uint8_t touched(void);
   TS_Point getPoint(uint8_t n = 0);
+  void getPoints(TS_Point *points, uint8_t maxtouches);
 
   // void autoCalibrate(void);
 
