@@ -40,6 +40,7 @@ Adafruit_FT5336::Adafruit_FT5336() { touches = 0; }
 /**************************************************************************/
 /*!
     @brief  Setups the I2C interface and hardware, identifies if chip is found
+    @param i2c_addr The 7-bit address, defaults to 0x38
     @param theWire Which I2C bus to use, defaults to &Wire
     @returns True if an FT5336 is found, false on any failure
 */
@@ -71,7 +72,7 @@ bool Adafruit_FT5336::begin(uint8_t i2c_addr, TwoWire *theWire) {
 #endif
 
   // change threshhold to be higher/lower
-  //writeRegister8(FT53XX_REG_THRESHHOLD, thresh);
+  // writeRegister8(FT53XX_REG_THRESHHOLD, thresh);
 
   if (readRegister8(FT53XX_REG_VENDID) != FT53XX_VENDID) {
     return false;
@@ -101,9 +102,7 @@ uint8_t Adafruit_FT5336::touched(void) {
 /**************************************************************************/
 /*!
     @brief  Queries the chip and retrieves a point data
-    @param  n The # index (0 or 1) to the points we can detect. In theory we can
-   detect 2 points but we've found that you should only use this for
-   single-touch since the two points cant share the same half of the screen.
+    @param  n The # index (0 to 4 inclusive) to the points we can detect.
     @returns {@link TS_Point} object that has the x and y coordinets set. If the
    z coordinate is 0 it means the point is not touched. If z is 1, it is
    currently touched.
@@ -118,27 +117,36 @@ TS_Point Adafruit_FT5336::getPoint(uint8_t n) {
   }
 }
 
-
+/**************************************************************************/
+/*!
+    @brief  Queries the chip and retrieves up to 'maxtouches' points
+    @param points Array of {@link TS_Point} objects that will be filled with
+   x/y/z data. z coordinate is 0 it means the point is not touched. If z is 1,
+   it is currently touched.
+    @param  maxtouches The number of allocated points that we could fill with
+   data.
+*/
+/**************************************************************************/
 void Adafruit_FT5336::getPoints(TS_Point *points, uint8_t maxtouches) {
   readData();
-  
+
   // zero out all the points
-  for (uint8_t i=0; i<maxtouches; i++) {
+  for (uint8_t i = 0; i < maxtouches; i++) {
     points[i].x = 0;
     points[i].y = 0;
     points[i].z = 0;
   }
 
   // identify all points and assign
-  for (uint8_t i=0; i<touches; i++) {
+  for (uint8_t i = 0; i < touches; i++) {
     uint8_t id = touchID[i];
-    if (id >= maxtouches) continue;
+    if (id >= maxtouches)
+      continue;
     points[id].x = touchX[i];
     points[id].y = touchY[i];
     points[id].z = 1;
   }
 }
-
 
 /************ lower level i/o **************/
 
@@ -161,21 +169,21 @@ void Adafruit_FT5336::readData(void) {
   gesture = i2cdat[FT5336_GEST_ID];
 #ifdef FT5336_DEBUG
   if (gesture) {
-    Serial.print("Gesture #"); 
+    Serial.print("Gesture #");
     Serial.println(gesture);
   }
 #endif
 
-  for (uint8_t i=0; i<touches; i++) {
-      touchX[i] = i2cdat[FT5336_TOUCH1_XH + i*6] & 0x0F;
-      touchX[i] <<= 8;
-      touchX[i] |= i2cdat[FT5336_TOUCH1_XL + i*6]; 
+  for (uint8_t i = 0; i < touches; i++) {
+    touchX[i] = i2cdat[FT5336_TOUCH1_XH + i * 6] & 0x0F;
+    touchX[i] <<= 8;
+    touchX[i] |= i2cdat[FT5336_TOUCH1_XL + i * 6];
 
-      touchY[i] = i2cdat[FT5336_TOUCH1_YH + i*6] & 0x0F;
-      touchY[i] <<= 8;
-      touchY[i] |= i2cdat[FT5336_TOUCH1_YL + i*6];
+    touchY[i] = i2cdat[FT5336_TOUCH1_YH + i * 6] & 0x0F;
+    touchY[i] <<= 8;
+    touchY[i] |= i2cdat[FT5336_TOUCH1_YL + i * 6];
 
-      touchID[i] = i2cdat[FT5336_TOUCH1_YH + i*6] >> 4;
+    touchID[i] = i2cdat[FT5336_TOUCH1_YH + i * 6] >> 4;
   }
 
 #ifdef FT5336_DEBUG
@@ -206,7 +214,8 @@ void Adafruit_FT5336::writeRegister8(uint8_t reg, uint8_t val) {
 
 /**************************************************************************/
 /*!
-    @brief  Instantiates a new touchpoint class with x, y and z set to 0 by default
+    @brief  Instantiates a new touchpoint class with x, y and z set to 0 by
+   default
 */
 /**************************************************************************/
 TS_Point::TS_Point(void) { x = y = z = 0; }
@@ -229,6 +238,7 @@ TS_Point::TS_Point(int16_t _x, int16_t _y, int16_t _z) {
 /**************************************************************************/
 /*!
     @brief  Simple == comparator for two TS_Point objects
+    @param p1 The other object to compare against
     @returns True if x, y and z are the same for both points, False otherwise.
 */
 /**************************************************************************/
@@ -239,6 +249,7 @@ bool TS_Point::operator==(TS_Point p1) {
 /**************************************************************************/
 /*!
     @brief  Simple != comparator for two TS_Point objects
+    @param p1 The other object to compare against
     @returns False if x, y and z are the same for both points, True otherwise.
 */
 /**************************************************************************/
